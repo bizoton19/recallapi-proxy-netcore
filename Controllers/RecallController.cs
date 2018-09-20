@@ -12,14 +12,14 @@ namespace Opendata.Recalls.Controllers
     {
         // GET api/values
         [HttpGet]
-        public IEnumerable<string> Get()
+        public async Task<IEnumerable<Recall>> Get()
         {
-            //var repo = new RecallRepository();
-            //return await repo.RetrieveRecall(
-              // "atv",
-              // "","","","","",""
-            //);
-            return new string[]{"test", "test2"};
+            var repo = new RecallRepository();
+            return await repo.RetrieveRecall(
+               "atv",
+               "","","","","",""
+            );
+            
         }
 
         // GET api/values/5
