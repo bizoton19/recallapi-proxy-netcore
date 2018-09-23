@@ -8,12 +8,13 @@ using System.Text;
 using System;
 using System.Linq;
 using System.Net.Http;
+using Opendata.Recalls.Commands;
 
 namespace Opendata.Recalls.Repository
 {
-    public class RecallRepository : IRecallRepository
+    public class RecallApiProxyRepository : IRecallApiProxyRepository
     {
-        public async Task<List<Recalls.Models.Recall>> RetrieveRecall(string searchfor, string productname, string manufacturername, string producttype, string productmodel, string recalldateend, string recalldatestart)
+        public async Task<List<Recalls.Models.Recall>> RetrieveRecall(SearchCommand command)
         {
             string SERVICE_ROOT = "https://www.saferproducts.gov/RestWebServices/Recall?format=json" ;//Environment.GetEnvironmentVariable("CPSCAPIUrlRoot");
 
@@ -23,30 +24,30 @@ namespace Opendata.Recalls.Repository
             List<Recalls.Models.Recall> recList = null;
             List<Recalls.Models.Recall> finalPO = null;
 
-            if (!String.IsNullOrEmpty(searchfor))
+            if (!String.IsNullOrEmpty(command.SearchFor))
             {
                     StringBuilder uriBuilder1 = new StringBuilder(SERVICE_ROOT);
-                    uriBuilder1.AppendFormat("&RecallTitle={0}", searchfor);
+                    uriBuilder1.AppendFormat("&RecallTitle={0}", command.SearchFor);
                     Task<List<Recall>> poList1 = RecallList(uriBuilder1.ToString());
 
                     StringBuilder uriBuilder2 = new StringBuilder(SERVICE_ROOT);
-                    uriBuilder2.AppendFormat("&ProductName={0}", searchfor);
+                    uriBuilder2.AppendFormat("&ProductName={0}", command.SearchFor);
                     var poList2 = RecallList(uriBuilder2.ToString());
 
                     StringBuilder uriBuilder3 = new StringBuilder(SERVICE_ROOT);
-                    uriBuilder3.AppendFormat("&Hazard={0}", searchfor);
+                    uriBuilder3.AppendFormat("&Hazard={0}", command.SearchFor);
                     var poList3 = RecallList(uriBuilder3.ToString());
 
                     StringBuilder uriBuilder4 = new StringBuilder(SERVICE_ROOT);
-                    uriBuilder4.AppendFormat("&ManufacturerCountry={0}", searchfor);
+                    uriBuilder4.AppendFormat("&ManufacturerCountry={0}", command.SearchFor);
                     var poList4 = RecallList(uriBuilder4.ToString());
 
                     StringBuilder uriBuilder5 = new StringBuilder(SERVICE_ROOT);
-                    uriBuilder5.AppendFormat("&Manufacturer={0}", searchfor);
+                    uriBuilder5.AppendFormat("&Manufacturer={0}", command.SearchFor);
                     var poList5 = RecallList(uriBuilder5.ToString());
 
                     StringBuilder uriBuilder6 = new StringBuilder(SERVICE_ROOT);
-                    uriBuilder6.AppendFormat("&RecallNumber={0}", searchfor);
+                    uriBuilder6.AppendFormat("&RecallNumber={0}", command.SearchFor);
                     var poList6 = RecallList(uriBuilder6.ToString());
                     finalPO = poList1.Result.Union(poList1.Result, new RecallComparer()).ToList();
                     finalPO = finalPO.Union(poList2.Result, new RecallComparer()).ToList();
@@ -57,40 +58,40 @@ namespace Opendata.Recalls.Repository
 
             }
 
-            if (!String.IsNullOrEmpty(productname) ||
-                 !String.IsNullOrEmpty(manufacturername) ||
-                 !String.IsNullOrEmpty(producttype) ||
-                 !String.IsNullOrEmpty(productmodel) ||
-                 !String.IsNullOrEmpty(recalldateend) ||
-                 !String.IsNullOrEmpty(recalldateend))
+            if (!String.IsNullOrEmpty(command.ProductName) ||
+                 !String.IsNullOrEmpty(command.ManufacturerName) ||
+                 !String.IsNullOrEmpty(command.ProductType) ||
+                 !String.IsNullOrEmpty(command.ProductModel) ||
+                 !String.IsNullOrEmpty(command.RecallDateEnd) ||
+                 !String.IsNullOrEmpty(command.RecallDateStart))
             {
-                if (!String.IsNullOrEmpty(productname))
+                if (!String.IsNullOrEmpty(command.ProductName))
                 {
-                    uriBuilder.AppendFormat("&ProductName={0}", productname);
+                    uriBuilder.AppendFormat("&ProductName={0}", command.ProductName);
                 }
 
-                if (!String.IsNullOrEmpty(manufacturername))
+                if (!String.IsNullOrEmpty(command.ManufacturerName))
                 {
-                    uriBuilder.AppendFormat("&manufacturer={0}", manufacturername);
+                    uriBuilder.AppendFormat("&manufacturer={0}", command.ManufacturerName);
                 }
 
-                if (!String.IsNullOrEmpty(producttype))
+                if (!String.IsNullOrEmpty(command.ProductType))
                 {
-                    uriBuilder.AppendFormat("&ProductType={0}", producttype);
+                    uriBuilder.AppendFormat("&ProductType={0}", command.ProductType);
                 }
 
-                if (!String.IsNullOrEmpty(productmodel))
+                if (!String.IsNullOrEmpty(command.ProductModel))
                 {
-                    uriBuilder.AppendFormat("&RecallDescription={0}", productmodel);
+                    uriBuilder.AppendFormat("&RecallDescription={0}", command.ProductModel);
                 }
-                if (!String.IsNullOrEmpty(recalldateend))
+                if (!String.IsNullOrEmpty(command.RecallDateEnd))
                 {
-                    uriBuilder.AppendFormat("&RecallDateEnd={0:yyyy‐MM‐dd}", recalldateend);
+                    uriBuilder.AppendFormat("&RecallDateEnd={0:yyyy‐MM‐dd}", command.RecallDateEnd);
                 }
 
-                if (!String.IsNullOrEmpty(recalldateend))
+                if (!String.IsNullOrEmpty(command.RecallDateStart))
                 {
-                    uriBuilder.AppendFormat("&RecallDateStart={0:yyyy‐MM‐dd}", recalldatestart);
+                    uriBuilder.AppendFormat("&RecallDateStart={0:yyyy‐MM‐dd}", command.RecallDateStart);
                 }
 
                 recList = await RecallList(uriBuilder.ToString());

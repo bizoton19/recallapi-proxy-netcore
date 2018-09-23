@@ -1,8 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Net.Http;
+using System.Net;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Opendata.Recalls.Commands;
 using Opendata.Recalls.Models;
 using Opendata.Recalls.Repository;
 namespace Opendata.Recalls.Controllers
@@ -10,41 +13,30 @@ namespace Opendata.Recalls.Controllers
     [Route("api/[controller]")]
     public class RecallController : Controller
     {
+        private readonly IRecallApiProxyRepository _recallRepository;
+
+        public RecallController(IRecallApiProxyRepository recallRepository)
+        {
+            _recallRepository = recallRepository;
+        }
         // GET api/values
         [HttpGet]
-        public async Task<IEnumerable<Recall>> Get()
+        public async Task<HttpResponseMessage> Get(HttpRequestMessage req)
         {
-            var repo = new RecallRepository();
-            return await repo.RetrieveRecall(
-               "atv",
-               "","","","","",""
+            var recalls = await _recallRepository.RetrieveRecall(
+               new SearchCommand(){
+                   RecallDateStart=DateTime.Now.AddMonths(-6).ToString("yyyy-MM-dd")
+               }
             );
-            
+            HttpResponseMessage resp = new HttpResponseMessage(HttpStatusCode.OK);
+            resp.Headers.Add("count",recalls.Count.ToString());
+            return resp;
+
         }
 
-        // GET api/values/5
-        [HttpGet("{id}")]
-        public string Get(int id)
-        {
-            return "value";
-        }
-
-        // POST api/values
+        // POST api/recall
         [HttpPost]
-        public void Post([FromBody]string value)
-        {
-        }
+        public async Task<IEnumerable<Recall>> Post([FromBody]SearchCommand value) => await _recallRepository.RetrieveRecall(value);
 
-        // PUT api/values/5
-        [HttpPut("{id}")]
-        public void Put(int id, [FromBody]string value)
-        {
-        }
-
-        // DELETE api/values/5
-        [HttpDelete("{id}")]
-        public void Delete(int id)
-        {
-        }
     }
 }
