@@ -8,16 +8,20 @@ using Microsoft.AspNetCore.Mvc;
 using Opendata.Recalls.Commands;
 using Opendata.Recalls.Models;
 using Opendata.Recalls.Repository;
+using Microsoft.Extensions.Logging;
+
 namespace Opendata.Recalls.Controllers
 {
     [Route("api/[controller]")]
     public class RecallController : Controller
     {
         private readonly IRecallApiProxyRepository _recallRepository;
+        private readonly ILogger _logger;
 
-        public RecallController(IRecallApiProxyRepository recallRepository)
+        public RecallController(IRecallApiProxyRepository recallRepository,ILogger logger)
         {
             _recallRepository = recallRepository;
+            _logger = logger;
         }
         // GET api/values
         [HttpGet]
