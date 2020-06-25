@@ -18,29 +18,72 @@ namespace Opendata.Recalls.Controllers
         private readonly IRecallApiProxyRepository _recallRepository;
         private readonly ILogger _logger;
 
-        public RecallController(IRecallApiProxyRepository recallRepository,ILogger logger)
+        public RecallController(IRecallApiProxyRepository recallRepository,ILogger<RecallController> logger)
         {
             _recallRepository = recallRepository;
-            _logger = logger;
+           _logger = logger;
         }
         // GET api/values
         [HttpGet]
-        public async Task<HttpResponseMessage> Get(HttpRequestMessage req)
+        [Route("/recall/latest")]
+        public async Task<IActionResult> Get(HttpRequestMessage req)
+        {
+            var recalls = await _recallRepository.RetrieveRecall(
+              new SearchCommand(){
+                   Data = new SearchCommand.Params(){
+                      RecallDateStart =DateTime.Now.AddMonths(-6).ToString("yyyy-MM-dd")
+                   }
+               }
+            );
+            var limit = 7;
+            HttpResponseMessage resp = new HttpResponseMessage(HttpStatusCode.OK);
+            resp.Headers.Add("count",recalls.Count.ToString());
+            
+            return Ok(new {
+                resultCount = limit,
+                recalls = recalls.Take(limit).ToList()
+            });
+
+        }
+         [HttpGet]
+        [Route("/recall/categories")]
+        public async Task<IActionResult> Get()
         {
             var recalls = await _recallRepository.RetrieveRecall(
                new SearchCommand(){
-                   RecallDateStart=DateTime.Now.AddMonths(-6).ToString("yyyy-MM-dd")
+                   Data = new SearchCommand.Params(){
+                      RecallDateStart =DateTime.Now.AddMonths(-6).ToString("yyyy-MM-dd")
+                   }
                }
             );
+            var limit = 7;
             HttpResponseMessage resp = new HttpResponseMessage(HttpStatusCode.OK);
             resp.Headers.Add("count",recalls.Count.ToString());
-            return resp;
+            
+            return Ok(new {
+                resultCount = limit,
+                recalls = recalls.Take(limit).ToList()
+            });
 
         }
 
         // POST api/recall
         [HttpPost]
-        public async Task<IEnumerable<Recall>> Post([FromBody]SearchCommand value) => await _recallRepository.RetrieveRecall(value);
+        [Route("/recall")]
+        public async Task<IActionResult> Post([FromBody] SearchCommand cmd) {
+           
+        if (!ModelState.IsValid)
+          return BadRequest(cmd);
+         
+          var results = await _recallRepository.RetrieveRecall(cmd);
+          if(results==null){
+              return  BadRequest("Results is null");
+          }
+          return  Ok( new {
+                resultCount = results.Count,
+                recalls = results
+            });
+        } 
 
     }
 }
